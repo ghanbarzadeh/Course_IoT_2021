@@ -9,3 +9,8 @@ Face recognition
 https://machinelearningmastery.com/how-to-develop-a-face-recognition-system-using-facenet-in-keras-and-an-svm-classifier/
 https://machinelearningmastery.com/how-to-perform-face-detection-with-classical-and-deep-learning-methods-in-python-with-keras/
 https://www.pyimagesearch.com/2018/06/18/face-recognition-with-opencv-python-and-deep-learning/
+
+Siamese Networks
+https://keras.io/examples/vision/siamese_network/
+https://www.pyimagesearch.com/2020/11/30/siamese-networks-with-keras-tensorflow-and-deep-learning/
+https://towardsdatascience.com/one-shot-learning-with-siamese-networks-using-keras-17f34e75bb3d
