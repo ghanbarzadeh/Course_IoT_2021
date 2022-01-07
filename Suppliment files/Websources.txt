@@ -1,0 +1,11 @@
+Connecting RPI together
+https://gist.github.com/sidwarkd/282fa9ee820663f1da3cc731e69434e4
+
+Python socket
+https://stackoverflow.com/questions/10901249/sockets-simulate-multiple-clients-in-python-using-one-machine-nic
+https://docs.python.org/3/library/socket.html
+
+Face recognition
+https://machinelearningmastery.com/how-to-develop-a-face-recognition-system-using-facenet-in-keras-and-an-svm-classifier/
+https://machinelearningmastery.com/how-to-perform-face-detection-with-classical-and-deep-learning-methods-in-python-with-keras/
+https://www.pyimagesearch.com/2018/06/18/face-recognition-with-opencv-python-and-deep-learning/
