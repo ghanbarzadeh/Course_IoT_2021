@@ -14,3 +14,9 @@ Siamese Networks
 https://keras.io/examples/vision/siamese_network/
 https://www.pyimagesearch.com/2020/11/30/siamese-networks-with-keras-tensorflow-and-deep-learning/
 https://towardsdatascience.com/one-shot-learning-with-siamese-networks-using-keras-17f34e75bb3d
+
+Siamese Networks github
+https://github.com/nevoit/Siamese-Neural-Networks-for-One-shot-Image-Recognition
+https://github.com/rohanrao619/Face_Recognition_using_Siamese_Network
+https://github.com/gchoi/face-recognition-using-siamese-network
+https://github.com/adityajn105/Face-Recognition-Siamese-Network
