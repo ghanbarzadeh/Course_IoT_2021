@@ -1,0 +1,72 @@
+% packages
+
+% template specific packages
+\usepackage[utf8]{inputenc} % Required for inputting international characters
+\usepackage[T1]{fontenc} % Output font encoding for international characters
+%\usepackage{mathpazo} % Use the Palatino font
+
+\usepackage{graphicx} % Required for including images
+
+\usepackage{booktabs} % Required for better horizontal rules in tables
+
+\usepackage{listings} % Required for insertion of code
+
+\usepackage{enumerate} % To modify the enumerate environment
+
+
+% my packages
+
+\setlength\parindent{0pt}
+
+%\usepackage[framed,numbered,autolinebreaks,useliterate]{packages/mcode}
+
+\graphicspath{{Figures/}}
+
+\usepackage{subfig} % Required for creating figures with multiple parts (subfigures)
+
+\usepackage{hyperref} % More descriptive referencing
+\usepackage{xcolor}
+\hypersetup{
+    colorlinks,
+    linkcolor={blue!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+\AtBeginDocument{\renewcommand{\ref}[1]{\autoref{#1}}}
+
+\usepackage{float}
+
+\usepackage{amsmath}
+
+\definecolor{codegreen}{rgb}{0.25,0.5,0.5}
+\definecolor{codegray}{rgb}{0.4,0.4,0.4}
+\definecolor{codepurple}{rgb}{0.729,0.129,0.129}
+\definecolor{backcolour}{rgb}{0.968,0.968,0.968}
+\definecolor{rcolour}{rgb}{0.81,0.81,0.81}
+\definecolor{impcolour}{rgb}{0,0.5,0}
+
+\lstdefinestyle{mystyle}{
+	language=Python,
+	frame=single,
+	framerule=1.5pt,
+	rulecolor=\color{rcolour},
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{impcolour},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=t,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=10pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=4,
+}
+
+\lstset{style=mystyle}
+\renewcommand{\lstlistingname}{In}
