@@ -4,3 +4,4 @@ opencv-python
 matplotlib
 pylab-sdk
 tfa-nightly
+Pillow
