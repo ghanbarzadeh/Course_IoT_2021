@@ -5,7 +5,7 @@ import numpy as np
 from matplotlib.image import imread
 import matplotlib.pyplot as plt
 import os
-from detect_faces import detect_faces
+from face_detection import detect_faces
 import cv2
 
 nn = face_recognition_network()
@@ -22,10 +22,11 @@ for test_image in test_images:
     image_path = os.path.join(test_images_path, test_image)
     im = imread(image_path)
     faces_coordinate = detect_faces(im)
+    print(faces_coordinate)
 
     present_people = [] # Empty list to populate with people
     for face_coordinate in faces_coordinate:
-        x, y, w, h = face_coordinate
+        x, y, w, h = face_coordinate['box']
         face_image = im[y:y+h, x:x+w]
         face_image = cv2.resize(face_image, (154, 154), interpolation = cv2.INTER_AREA)
         
@@ -37,7 +38,7 @@ for test_image in test_images:
             dual_images = np.array([[face_image, i] for i in p_images])
             s.append(np.mean(nn.predict(dual_images)))
         s = np.array(s)
-        print(s)
+        # print(s)
         if np.max(s) > 0.4:
             present_people.append(people[np.argmax(s)])
-    print(present_people)
+    # print(present_people)

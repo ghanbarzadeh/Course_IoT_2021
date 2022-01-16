@@ -8,9 +8,9 @@ import os
 from detect_faces import detect_faces
 import cv2
 
-im1 = imread(r"datasets\lfw_images\15-93.jpeg")
-im2 = imread(r"datasets\lfw_images\15-40.jpeg")
-im3 = imread(r"datasets\lfw_images\14-62.jpeg")
+im1 = imread(r"people\Armin Ghanbarzadeh\1.jpg") / 255
+im2 = imread(r"people\Armin Ghanbarzadeh\2.jpg") / 255
+im3 = imread(r"people\Mohammad Hoseinzadeh\1.jpg") / 255
 
 
 x = np.array([[im1, im2],[im1,im3]])

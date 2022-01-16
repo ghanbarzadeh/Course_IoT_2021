@@ -5,3 +5,4 @@ matplotlib
 pylab-sdk
 tfa-nightly
 Pillow
+mtcnn
