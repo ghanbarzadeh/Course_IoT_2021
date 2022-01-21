@@ -24,9 +24,11 @@ def euclidean_distance(vectors):
 
 class face_recognition_network:
 
-    def __init__(self):
+    def __init__(self, verbose=True):
         self.model = self.make_model()
-        print('* Model created and initialized with random weights')
+        self.verbose = verbose
+        if self.verbose:
+            print('* Model created and initialized with random weights')
         self.weights_version = -1
         self.WEIGHTS_PATH = 'models'
         # self.model.summary() 
@@ -69,7 +71,17 @@ class face_recognition_network:
             return None
         self.weights_version = int(weights[8:12])
         self.model.load_weights(os.path.join(self.WEIGHTS_PATH, weights))
-        print('* Loaded weights version {} from file {}'.format(self.weights_version, os.path.join(self.WEIGHTS_PATH, weights)))
+        if self.verbose:
+            print('* Loaded weights version {} from file {}'.format(self.weights_version, os.path.join(self.WEIGHTS_PATH, weights)))
+        return self.weights_version
+
+    
+    def load_weights_from_base(self, weights_path):
+        weights_file = os.path.split(weights_path)[-1]
+        self.weights_version = int(weights_file[17:21])
+        self.model.load_weights(weights_path)
+        if self.verbose:
+            print('* Loaded weights version {} from file {}'.format(self.weights_version, weights_path))
         return self.weights_version
     
 
@@ -79,4 +91,5 @@ class face_recognition_network:
         else:
             weights_file = os.path.join(self.WEIGHTS_PATH, 'weights_{:04d}.h5'.format(self.weights_version))
             self.model.save_weights(weights_file)
-        print('* Saved weights version {} to file {}'.format(self.weights_version, os.path.join(self.WEIGHTS_PATH, weights_file)))
+        if self.verbose:
+            print('* Saved weights version {} to file {}'.format(self.weights_version, os.path.join(self.WEIGHTS_PATH, weights_file)))

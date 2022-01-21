@@ -1,12 +1,15 @@
 import socket
-import time
-import pickle as pkl
 import os
+import glob
 
-IP = "192.168.1.5"
+IP = "192.168.0.1"
 PORT = 1234
 
-weight_file = [i for i in os.listdir() if (i[-3:]=='pkl' and i[:7]=='weights')][-1]
+WEIGHTS_FOLDER = 'server_weights'
+
+weight_files = glob.glob(os.path.join(WEIGHTS_FOLDER, '/*.h5'))
+weight_files.sort()
+weight_file = os.path.split(weight_files[-1])[-1]
 weight_version = int(weight_file[8:12])
 
 HEADERSIZE = 10
@@ -18,12 +21,12 @@ s.listen(5)
 
 clientsocket, address = s.accept()
 print(f"Connection from {address} has been established.")
-print('Sending weights: {}'.format(weight_file))
+print('Sending weights version: {}, file: {}'.format(weight_version, weight_file))
 msg = str(weight_version).encode('utf-8')
 msg = bytes(f"{len(msg):<{HEADERSIZE}}", 'utf-8')+msg
 clientsocket.send(msg)
 
-filename = weight_file
+filename = os.path.join(WEIGHTS_FOLDER, weight_file)
 with open(filename, 'rb') as file:
     sendfile = file.read()
 sendfile = bytes(f"{len(sendfile):<{HEADERSIZE}}",'utf-8')+sendfile

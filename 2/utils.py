@@ -11,6 +11,7 @@ tf.get_logger().setLevel('ERROR')
 import pickle as pkl
 from sklearn.preprocessing import Normalizer
 from sklearn.model_selection import train_test_split
+from face_recognition import face_recognition_network
 
 
 def extract_faces(image, required_size=(160, 160)):
@@ -224,3 +225,26 @@ def test_model_with_image(image_array, model, database):
                     'y2':faces_data[i][2][1]})
     return res
         
+def average_weights(weights_paths, save_path):
+    nn = face_recognition_network(verbose=False)
+    weights_array = []
+    for w in weights_paths:
+        nn.load_weights_from_base(w)
+        weights_array.append(nn.model.get_weights())
+    layer_number = len(weights_array[0])
+    layer_weights = []
+    for i in range(layer_number):
+        temp = []
+        for j in range(len(weights_array)):
+            temp.append(weights_array[j][i])
+        layer_weights.append(temp)
+    new_weights = []
+    for i in range(layer_number):
+        temp = np.zeros(layer_weights[i][0].shape)
+        for j in range(len(weights_array)):
+            temp = temp + layer_weights[i][j]
+        temp = temp / len(weights_array)
+        new_weights.append(temp)
+    nn.model.set_weights(new_weights)
+    nn.save_weights(save_path)
+    return new_weights
