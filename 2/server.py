@@ -59,6 +59,7 @@ for i in range(NUMBER_OF_CLIENTS):
 
 print('')
 print('- Averaging the weights from clients')
+print('')
 
 all_weights = os.listdir(WEIGHTS_FOLDER)
 client_weights = []

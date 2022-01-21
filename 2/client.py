@@ -40,6 +40,7 @@ sendfile = bytes(f"{len(sendfile):<{HEADERSIZE}}",'utf-8')+sendfile
 s.send(sendfile)
 print(' - Weights sent')
 
+print('')
 print('- Getting new weights version: {}'.format(version+1))
 
 with open(os.path.join(WEIGHTS_FOLDER, "weights_{:04d}.h5".format(version+1)),'wb') as file:
