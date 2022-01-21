@@ -2,82 +2,81 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 import pickle as pkl
-from model_utils import euclidean_distance
+import glob
+from keras import backend as K
+import cv2
+from numpy import load
+from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import Normalizer
+from sklearn.svm import SVC
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Dense
+import tensorflow as tf
+tf.get_logger().setLevel('ERROR')
+import numpy as np
+
+def euclidean_distance(vectors):
+        featsA, featsB = vectors
+        sumSquared = K.sum(K.square(featsA - featsB), axis=1,keepdims=True)
+        return K.sqrt(K.maximum(sumSquared, K.epsilon()))
 
 
 class face_recognition_network:
 
     def __init__(self):
         self.model = self.make_model()
-        # self.model.summary()
+        print('* Model created and initialized with random weights')
+        self.weights_version = -1
+        self.WEIGHTS_PATH = 'models'
+        # self.model.summary() 
 
-
-    def tf_siamese_nn(self, shape=(154, 154, 3), embedding=64):
-        inputs = tf.keras.layers.Input(shape)
-
-        x = tf.keras.layers.Conv2D(96, (11, 11), padding="same")(inputs)
-        x = tf.keras.layers.LeakyReLU(alpha=0.1)(x)
-        x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
-        x = tf.keras.layers.Dropout(0.3)(x)
-
-        x = tf.keras.layers.Conv2D(256, (5, 5), padding="same")(x)
-        x = tf.keras.layers.LeakyReLU(alpha=0.1)(x)
-        x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
-        x = tf.keras.layers.Dropout(0.3)(x)
-
-        x = tf.keras.layers.Conv2D(384, (3, 3), padding="same")(x)
-        x = tf.keras.layers.LeakyReLU(alpha=0.1)(x)
-        x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
-        x = tf.keras.layers.Dropout(0.3)(x)
-        
-        x=tf.keras.layers.Conv2D(128, (3, 3), padding="same")(x)
-        x = tf.keras.layers.LeakyReLU(alpha=0.1)(x)
-        x=tf.keras.layers.BatchNormalization()(x)
-        x=tf.keras.activations.relu(x)
-        
-        x = tf.keras.layers.GlobalAveragePooling2D()(x)
-        
-        outputs=tf.keras.layers.Dense(embedding)(x)
-        model = tf.keras.Model(inputs, outputs)
-        
-        return model
-    
-
-    def make_model(self, shape=(154, 154, 3)):
-        img1 = tf.keras.layers.Input(shape)
-        img2 =  tf.keras.layers.Input(shape)
-        featureExtractor = self.tf_siamese_nn()
-        featsA = featureExtractor(img1)
-        featsB = featureExtractor(img2)
-
-        distance = tf.keras.layers.Lambda(euclidean_distance)([featsA, featsB])
-        outputs = tf.keras.layers.Dense(1, activation="sigmoid")(distance)
-
-        model = tf.keras.Model(inputs=[img1, img2], outputs=outputs)
+    def make_model(self):
+        input_1 = tf.keras.layers.Input(shape=(128,))
+        input_2 = tf.keras.layers.Input(shape=(128,))
+        distance = tf.keras.layers.Lambda(euclidean_distance)([input_1, input_2])
+        x = Dense(100, activation='relu')(distance)
+        output = Dense(1, activation='sigmoid')(x)
+        model = tf.keras.Model(inputs=[input_1, input_2], outputs=output)
         return model
 
 
-    def fit(self, x_train, x_val, y_train, y_val, lr, epochs):
-        lr_schedule = tf.keras.optimizers.schedules.CosineDecay(
-            initial_learning_rate=lr, decay_steps=48000)
-        optimizer = tf.keras.optimizers.SGD(learning_rate=lr_schedule, momentum=0.9)
-        self.model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=["accuracy"])
-        history = self.model.fit(x_train, y_train, validation_data=(x_val, y_val), batch_size=15, epochs=epochs)
-        return history
+    def fit(self, x_train, x_val, y_train, y_val, epochs):
+        self.model.compile(optimizer='adam', loss='binary_crossentropy', metrics=["accuracy"])
+        history = self.model.fit([x_train[:,0], x_train[:,1]], y_train[:], epochs=epochs, 
+                                    validation_data=[[x_val[:,0],x_val[:,1]], y_val[:]], verbose=0)
+        self.weights_version += 1
+        return history.history
     
 
     def predict(self, x_test):
-        x_test = [x_test[:, 0], x_test[:, 1]]
+        x_test = [x_test[:, 0],x_test[:, 1]]
         y_test = self.model.predict(x_test)
+        # y_test = np.where(y_test, y_test>0.7, 1)
         return y_test
 
     
-    def load_weights(self, weights_file):
-        with open(weights_file, 'rb') as f:
-            weights = pkl.load(f)
-        self.model.set_weights(weights)
+    def load_weights(self, weights=None):
+        if weights=='latest':
+            weight_files = glob.glob(os.path.join(self.WEIGHTS_PATH, '*.h5'))
+            if len(weight_files)==0:
+                weights = None
+                self.weights_version = -1
+            else:
+                weight_files.sort()
+                weights = os.path.split(weight_files[-1])[-1]
+        if weights==None:
+            return None
+        self.weights_version = int(weights[8:12])
+        self.model.load_weights(os.path.join(self.WEIGHTS_PATH, weights))
+        print('* Loaded weights version {} from file {}'.format(self.weights_version, os.path.join(self.WEIGHTS_PATH, weights)))
+        return self.weights_version
     
 
-    def save_weights(self, weights_file):
-        with open(weights_file, 'wb') as f:
-            pkl.dump(self.model.get_weights(), f)
+    def save_weights(self, weights_file=None):
+        if weights_file:
+            self.model.save_weights(weights_file)
+        else:
+            weights_file = os.path.join(self.WEIGHTS_PATH, 'weights_{:04d}.h5'.format(self.weights_version))
+            self.model.save_weights(weights_file)
+        print('* Saved weights version {} to file {}'.format(self.weights_version, os.path.join(self.WEIGHTS_PATH, weights_file)))

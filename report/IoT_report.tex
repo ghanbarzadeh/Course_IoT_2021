@@ -119,217 +119,317 @@
 \begin{document}
 
 \maketitle 
-The code can be found at \url{https://github.com/ghanbarzadeh/Course_MachineVision_2021/blob/master/CHW4.ipynb}.
+The code can be found at \url{https://github.com/ghanbarzadeh/Course_IoT_2021}.
 %----------------------------------------------------------------------------------------
-\section*{Preprocessing Camera Images}
+\section*{Part I}
 
-\subsection*{Loading and Comparing Left \& Right Images}
+\subsection*{Loading Data}
 
-\begin{center}{\begin{minipage}{0.9\linewidth}
-\begin{lstlisting}[language=Python, basicstyle=\fontsize{8}{10}\selectfont\ttfamily]
-import numpy as np
-import cv2 as cv
-import matplotlib.pyplot as plt
+The dataset contains recorded data from a gearbox working normally and the same gearbox when it has a broken gear tooth. The data is recorded with 4 sensors, each corresponding to the vibration of a point on the gearbox body.
+For each class we have a total of 10 excel files. Each of these files has the vibration of the gears at a specific load. We have first merged all the data for each class and in \ref{t1} and \ref{t2}, some statistical properties of the dataset is shown.
 
-# Read both images and convert to grayscale
-img1 = cv.imread('left_img.png', cv.IMREAD_GRAYSCALE)
-img2 = cv.imread('right_img.png', cv.IMREAD_GRAYSCALE)
+\begin{table}[H]
+\centering
+\begin{tabular}{
+>{\columncolor[HTML]{FFFFFF}}c 
+>{\columncolor[HTML]{FFFFFF}}r 
+>{\columncolor[HTML]{FFFFFF}}r 
+>{\columncolor[HTML]{FFFFFF}}r 
+>{\columncolor[HTML]{FFFFFF}}r 
+>{\columncolor[HTML]{FFFFFF}}r 
+>{\columncolor[HTML]{FFFFFF}}r }	
+\multicolumn{1}{r}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{}}} & {\color[HTML]{212121} \textbf{Sensor 1}} & {\color[HTML]{212121} \textbf{Sensor 2}} & {\color[HTML]{212121} \textbf{Sensor 3}} & {\color[HTML]{212121} \textbf{Sensor 4}} & {\color[HTML]{212121} \textbf{load}} & {\color[HTML]{212121} \textbf{failure}} \\ \cline{2-7} 
+\multicolumn{1}{c|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{count}}} & {\color[HTML]{212121} 1.02e+06} & {\color[HTML]{212121} 1.02e+06} & {\color[HTML]{212121} 1.02e+06} & {\color[HTML]{212121} 1.02e+06} & {\color[HTML]{212121} 1.02e+06} & {\color[HTML]{212121} 1.02e+06} \\
+\multicolumn{1}{c|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{mean}}} & {\color[HTML]{212121} 3.70e-03} & {\color[HTML]{212121} -1.20e-03} & {\color[HTML]{212121} 8.14e-03} & {\color[HTML]{212121} -1.12e-04} & {\color[HTML]{212121} 4.58e+01} & {\color[HTML]{212121} 0.00e+00} \\
+\multicolumn{1}{c|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{std}}} & {\color[HTML]{212121} 7.38e+00} & {\color[HTML]{212121} 4.43e+00} & {\color[HTML]{212121} 4.11e+00} & {\color[HTML]{212121} 4.52e+00} & {\color[HTML]{212121} 2.83e+01} & {\color[HTML]{212121} 0.00e+00} \\
+\multicolumn{1}{c|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{min}}} & {\color[HTML]{212121} -5.87e+01} & {\color[HTML]{212121} -3.29e+01} & {\color[HTML]{212121} -2.92e+01} & {\color[HTML]{212121} -3.13e+01} & {\color[HTML]{212121} 0.00e+00} & {\color[HTML]{212121} 0.00e+00} \\
+\multicolumn{1}{c|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{25\%}}} & {\color[HTML]{212121} -3.92e+00} & {\color[HTML]{212121} -2.40e+00} & {\color[HTML]{212121} -2.20e+00} & {\color[HTML]{212121} -2.38e+00} & {\color[HTML]{212121} 2.00e+01} & {\color[HTML]{212121} 0.00e+00} \\
+\multicolumn{1}{c|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{50\%}}} & {\color[HTML]{212121} -1.15e-01} & {\color[HTML]{212121} 6.16e-02} & {\color[HTML]{212121} 5.24e-02} & {\color[HTML]{212121} 1.31e-01} & {\color[HTML]{212121} 5.00e+01} & {\color[HTML]{212121} 0.00e+00} \\
+\multicolumn{1}{c|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{75\%}}} & {\color[HTML]{212121} 3.79e+00} & {\color[HTML]{212121} 2.49e+00} & {\color[HTML]{212121} 2.29e+00} & {\color[HTML]{212121} 2.52e+00} & {\color[HTML]{212121} 7.00e+01} & {\color[HTML]{212121} 0.00e+00} \\
+\multicolumn{1}{c|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{max}}} & {\color[HTML]{212121} 5.67e+01} & {\color[HTML]{212121} 3.09e+01} & {\color[HTML]{212121} 2.51e+01} & {\color[HTML]{212121} 3.73e+01} & {\color[HTML]{212121} 9.00e+01} & {\color[HTML]{212121} 0.00e+00}
+\end{tabular}
+\caption{Healthy gearbox data statistics}
+\label{t1}
+\end{table}
 
-# ------------------------------------------------------------
-# PREPROCESSING
+\begin{table}[H]
+\centering
+\begin{tabular}{
+>{\columncolor[HTML]{FFFFFF}}c 
+>{\columncolor[HTML]{FFFFFF}}r 
+>{\columncolor[HTML]{FFFFFF}}r 
+>{\columncolor[HTML]{FFFFFF}}r 
+>{\columncolor[HTML]{FFFFFF}}r 
+>{\columncolor[HTML]{FFFFFF}}r 
+>{\columncolor[HTML]{FFFFFF}}r }
+\multicolumn{1}{r}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{}}} & {\color[HTML]{212121} \textbf{Sensor 1}} & {\color[HTML]{212121} \textbf{Sensor 2}} & {\color[HTML]{212121} \textbf{Sensor 3}} & {\color[HTML]{212121} \textbf{Sensor 4}} & {\color[HTML]{212121} \textbf{load}} & {\color[HTML]{212121} \textbf{failure}} \\ \cline{2-7} 
+\multicolumn{1}{c|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{count}}} & {\color[HTML]{212121} 1.01e+06} & {\color[HTML]{212121} 1.01e+06} & {\color[HTML]{212121} 1.01e+06} & {\color[HTML]{212121} 1.01e+06} & {\color[HTML]{212121} 1.01e+06} & {\color[HTML]{212121} 1.01e+06} \\
+\multicolumn{1}{c|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{mean}}} & {\color[HTML]{212121} -1.04e-03} & {\color[HTML]{212121} 1.73e-03} & {\color[HTML]{212121} 7.31e-04} & {\color[HTML]{212121} 1.34e-03} & {\color[HTML]{212121} 4.55e+01} & {\color[HTML]{212121} 1.00e+00} \\
+\multicolumn{1}{c|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{std}}} & {\color[HTML]{212121} 4.60e+00} & {\color[HTML]{212121} 4.39e+00} & {\color[HTML]{212121} 3.81e+00} & {\color[HTML]{212121} 4.41e+00} & {\color[HTML]{212121} 2.90e+01} & {\color[HTML]{212121} 0.00e+00} \\
+\multicolumn{1}{c|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{min}}} & {\color[HTML]{212121} -2.53e+01} & {\color[HTML]{212121} -3.25e+01} & {\color[HTML]{212121} -2.59e+01} & {\color[HTML]{212121} -2.74e+01} & {\color[HTML]{212121} 0.00e+00} & {\color[HTML]{212121} 1.00e+00} \\
+\multicolumn{1}{c|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{25\%}}} & {\color[HTML]{212121} -2.77e+00} & {\color[HTML]{212121} -2.47e+00} & {\color[HTML]{212121} -2.03e+00} & {\color[HTML]{212121} -2.37e+00} & {\color[HTML]{212121} 2.00e+01} & {\color[HTML]{212121} 1.00e+00} \\
+\multicolumn{1}{c|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{50\%}}} & {\color[HTML]{212121} -5.43e-02} & {\color[HTML]{212121} 1.26e-01} & {\color[HTML]{212121} 4.50e-02} & {\color[HTML]{212121} 1.01e-01} & {\color[HTML]{212121} 5.00e+01} & {\color[HTML]{212121} 1.00e+00} \\
+\multicolumn{1}{c|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{75\%}}} & {\color[HTML]{212121} 2.67e+00} & {\color[HTML]{212121} 2.68e+00} & {\color[HTML]{212121} 2.10e+00} & {\color[HTML]{212121} 2.44e+00} & {\color[HTML]{212121} 7.00e+01} & {\color[HTML]{212121} 1.00e+00} \\
+\multicolumn{1}{c|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{max}}} & {\color[HTML]{212121} 2.64e+01} & {\color[HTML]{212121} 2.47e+01} & {\color[HTML]{212121} 2.69e+01} & {\color[HTML]{212121} 3.24e+01} & {\color[HTML]{212121} 9.00e+01} & {\color[HTML]{212121} 1.00e+00}
+\end{tabular}
+\caption{Broken tooth gearbox data statistics}
+\label{t2}
+\end{table}
 
-# Compare unprocessed images
-fig, axes = plt.subplots(1, 2, figsize=(15, 10))
-axes[0].imshow(img1, cmap="gray")
-axes[1].imshow(img2, cmap="gray")
-axes[0].axhline(250)
-axes[1].axhline(250)
-axes[0].axhline(450)
-axes[1].axhline(450)
-plt.suptitle("Original images")
-plt.show()
-\end{lstlisting}
-\end{minipage}}\end{center}
+\subsection*{Data inspection}
 
-Running this shows us the left and right images with the lines $y=250$ and $y=450$.
+We can plot the data for healthy and broken gearbox to get a better understanding. 
 
 \begin{figure}[H]
 \centering
-\subfloat{\includegraphics[width=0.98\columnwidth]{1}}
-\caption{Comparing Left \& Right Images}
+\subfloat{\includegraphics[width=0.80\columnwidth]{s1}}
+\caption{Sensor 1 data in different time-windows for healthy and broken gear}
 \end{figure}
-
-\subsection*{Wrapping Images for Stereo Rectification}
-
-We must first detect suitable keypoints. 
-
-\begin{center}{\begin{minipage}{0.9\linewidth}
-\begin{lstlisting}[language=Python, basicstyle=\fontsize{8}{10}\selectfont\ttfamily]
-# Initiate SIFT detector
-sift = cv.SIFT_create()
-# find the keypoints and descriptors with SIFT
-kp1, des1 = sift.detectAndCompute(img1, None)
-kp2, des2 = sift.detectAndCompute(img2, None)
-
-# Visualize keypoints
-imgSift = cv.drawKeypoints(
-    img1, kp1, None, flags=cv.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-cv2_imshow(imgSift)
-\end{lstlisting}
-\end{minipage}}\end{center}
 
 \begin{figure}[H]
 \centering
-\subfloat{\includegraphics[width=0.78\columnwidth]{2}}
-\caption{Found Keypoint using SIFT}
+\subfloat{\includegraphics[width=0.80\columnwidth]{s2}}
+\caption{Sensor 2 data in different time-windows for healthy and broken gear}
 \end{figure}
-
-We can now match keypoints to use for stereo rectification. 
-
-\begin{center}{\begin{minipage}{0.9\linewidth}
-\begin{lstlisting}[language=Python, basicstyle=\fontsize{8}{10}\selectfont\ttfamily]
-# Match keypoints in both images
-FLANN_INDEX_KDTREE = 1
-index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
-search_params = dict(checks=50)   # or pass empty dictionary
-flann = cv.FlannBasedMatcher(index_params, search_params)
-matches = flann.knnMatch(des1, des2, k=2)
-
-# Keep good matches: calculate distinctive image features
-matchesMask = [[0, 0] for i in range(len(matches))]
-good = []
-pts1 = []
-pts2 = []
-
-for i, (m, n) in enumerate(matches):
-    if m.distance < 0.7*n.distance:
-        # Keep this keypoint pair
-        matchesMask[i] = [1, 0]
-        good.append(m)
-        pts2.append(kp2[m.trainIdx].pt)
-        pts1.append(kp1[m.queryIdx].pt)
-        
-# Visualizing keypoints between two images
-draw_params = dict(matchColor=(0, 255, 0),
-                   singlePointColor=(255, 0, 0),
-                   matchesMask=matchesMask[300:500],
-                   flags=cv.DrawMatchesFlags_DEFAULT)
-
-keypoint_matches = cv.drawMatchesKnn(
-    img1, kp1, img2, kp2, matches[300:500], None, **draw_params)
-cv2_imshow(keypoint_matches)
-\end{lstlisting}
-\end{minipage}}\end{center}
 
 \begin{figure}[H]
 \centering
-\subfloat{\includegraphics[width=0.98\columnwidth]{3}}
-\caption{Best matched keypoints}
+\subfloat{\includegraphics[width=0.80\columnwidth]{s3}}
+\caption{Sensor 3 data in different time-windows for healthy and broken gear}
 \end{figure}
-
-Fundamental Matrix calculation code
-
-\begin{center}{\begin{minipage}{0.9\linewidth}
-\begin{lstlisting}[language=Python, basicstyle=\fontsize{8}{10}\selectfont\ttfamily]
-pts1 = np.int32(pts1)
-pts2 = np.int32(pts2)
-fundamental_matrix, inliers = cv.findFundamentalMat(pts1, pts2, cv.FM_RANSAC)
-
-# We select only inlier points
-pts1 = pts1[inliers.ravel() == 1]
-pts2 = pts2[inliers.ravel() == 1]
-\end{lstlisting}
-\end{minipage}}\end{center}
-
-Visualizing Epilines:
-
-\begin{center}{\begin{minipage}{0.9\linewidth}
-\begin{lstlisting}[language=Python, basicstyle=\fontsize{8}{10}\selectfont\ttfamily]
-# Visualize epilines
-# Adapted from: https://docs.opencv.org/master/da/de9/tutorial_py_epipolar_geometry.html
-def drawlines(img1src, img2src, lines, pts1src, pts2src):
-    ''' img1 - image on which we draw the epilines for the points in img2
-        lines - corresponding epilines '''
-    r, c = img1src.shape
-    img1color = cv.cvtColor(img1src, cv.COLOR_GRAY2BGR)
-    img2color = cv.cvtColor(img2src, cv.COLOR_GRAY2BGR)
-    # Edit: use the same random seed so that two images are comparable!
-    np.random.seed(0)
-    for r, pt1, pt2 in zip(lines, pts1src, pts2src):
-        color = tuple(np.random.randint(0, 255, 3).tolist())
-        x0, y0 = map(int, [0, -r[2]/r[1]])
-        x1, y1 = map(int, [c, -(r[2]+r[0]*c)/r[1]])
-        img1color = cv.line(img1color, (x0, y0), (x1, y1), color, 1)
-        img1color = cv.circle(img1color, tuple(pt1), 5, color, -1)
-        img2color = cv.circle(img2color, tuple(pt2), 5, color, -1)
-    return img1color, img2color
-
-
-# Find epilines corresponding to points in right image (second image) and
-# drawing its lines on left image
-lines1 = cv.computeCorrespondEpilines(
-    pts2.reshape(-1, 1, 2), 2, fundamental_matrix)
-lines1 = lines1.reshape(-1, 3)
-img5, img6 = drawlines(img1, img2, lines1, pts1, pts2)
-
-# Find epilines corresponding to points in left image (first image) and
-# drawing its lines on right image
-lines2 = cv.computeCorrespondEpilines(
-    pts1.reshape(-1, 1, 2), 1, fundamental_matrix)
-lines2 = lines2.reshape(-1, 3)
-img3, img4 = drawlines(img2, img1, lines2, pts2, pts1)
-
-plt.subplot(121), plt.imshow(img5)
-plt.subplot(122), plt.imshow(img3)
-plt.show()
-\end{lstlisting}
-\end{minipage}}\end{center}
 
 \begin{figure}[H]
 \centering
-\subfloat{\includegraphics[width=0.98\columnwidth]{4}}
-\caption{Epilines}
+\subfloat{\includegraphics[width=0.80\columnwidth]{s4}}
+\caption{Sensor 4 data in different time-windows for healthy and broken gear}
 \end{figure}
 
-\section*{Stereo Rectification}
+\subsection*{Data preparation}
+
+Using the code below, we can split the dataset into train-test. Note that the split ratio is 80\%-20\%. 
 
 \begin{center}{\begin{minipage}{0.9\linewidth}
-\begin{lstlisting}[language=Python, basicstyle=\fontsize{8}{10}\selectfont\ttfamily]
-# Stereo rectification (uncalibrated variant)
-h1, w1 = img1.shape
-h2, w2 = img2.shape
-_, H1, H2 = cv.stereoRectifyUncalibrated(
-    np.float32(pts1), np.float32(pts2), fundamental_matrix, imgSize=(w1, h1)
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+from sklearn.model_selection import train_test_split
+
+# The last element contains the labels
+labels = healthy_df['failure'].values
+
+# The other data points are the electrocadriogram data
+data = healthy_df[['a1', 'a2', 'a3', 'a4']].values
+
+X_train, X_test, y_train, y_test = train_test_split(
+    data, labels, test_size=0.2, random_state=21
 )
 \end{lstlisting}
 \end{minipage}}\end{center}
 
-Visualizing the images after rectification
+We have also normalized the dataset to be between 0-1 using the formula below. 
+
+\begin{equation}
+X = \frac{X-X_{min}}{X_{max}-X_{min}}
+\end{equation}
 
 \begin{center}{\begin{minipage}{0.9\linewidth}
-\begin{lstlisting}[language=Python, basicstyle=\fontsize{8}{10}\selectfont\ttfamily]
-img1_rectified = cv.warpPerspective(img1, H1, (w1, h1))
-img2_rectified = cv.warpPerspective(img2, H2, (w2, h2))
-cv.imwrite("rectified_1.png", img1_rectified)
-cv.imwrite("rectified_2.png", img2_rectified)
-fig, axes = plt.subplots(1, 2, figsize=(15, 10))
-axes[0].imshow(img1_rectified, cmap="gray")
-axes[1].imshow(img2_rectified, cmap="gray")
-axes[0].axhline(250)
-axes[1].axhline(250)
-axes[0].axhline(450)
-axes[1].axhline(450)
-# plt.suptitle("Rectified images")
-plt.savefig("rectified_images.png")
-plt.show()
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+min_val = tf.reduce_min(X_train)
+max_val = tf.reduce_max(X_train)
+
+X_train = (X_train - min_val) / (max_val - min_val)
+X_test = (X_test - min_val) / (max_val - min_val)
+
+X_train = np.array(X_train)
+X_test = np.array(X_test)
 \end{lstlisting}
 \end{minipage}}\end{center}
 
+The dataset is a time series and we can use RNN or LSTM networks. For this matter, we take 200 consecutive data points and concatenate them to become one single data. So now we have a total of 4063 train data (time series data) and 1015 test data. 
+
+\subsection*{Neural network models}
+
+
+When training the network, we would only use the correct (healthy) data. This is because in anomaly detection, the auto-encoder network learns to reconstruct a certain time series signal. 
+
+\subsubsection*{LSTM autoencoder model} The autoencoder network first reduces the input size of (200,4) to (200, 16) and then (4). After we repeat this vector to obtain a size of (200,4). This then becomes (200, 16) and finally (200,4) which is the input dimension. 
+
 \begin{figure}[H]
 \centering
-\subfloat{\includegraphics[width=0.98\columnwidth]{5}}
-\caption{Rectified Images}
+\subfloat{\includegraphics[width=0.9\columnwidth]{LSTM}}
+\caption{LSTM-autoencoder neural network architecture}
 \end{figure}
+
+The model code is shown below. 
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+inputs = Input(shape=(200, 4))
+L1 = LSTM(16, activation='relu', return_sequences=True, 
+            kernel_regularizer=regularizers.l2(0.00))(inputs)
+L2 = LSTM(4, activation='relu', return_sequences=False)(L1)
+L3 = RepeatVector(200)(L2)
+L4 = LSTM(4, activation='relu', return_sequences=True)(L3)
+L5 = LSTM(16, activation='relu', return_sequences=True)(L4)
+output = TimeDistributed(Dense(4))(L5)    
+model = Model(inputs=inputs, outputs=output)
+
+model.compile(optimizer='adam', loss='mae')
+model.summary()
+
+nb_epochs = 150
+batch_size = 1024
+history = model.fit(data_train, data_train, epochs=nb_epochs, batch_size=batch_size, validation_split=0.05).history
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\subsubsection*{CNN autoencoder model}
+
+Another network that can be a suitable candidate for the problem is a 1D CNN-autoencoder network. 1D CNN can be used to analyze time series data. 
+
+The CNN-autoencoder network has 3 1D-CNN layers to reduce the data dimension ($200\rightarrow128\rightarrow64\rightarrow32$), and 3 1D-CNN transpose layers to decode ($32\rightarrow64\rightarrow128\rightarrow200$). 
+
+\begin{figure}[H]
+\centering
+\subfloat{\includegraphics[width=0.9\columnwidth]{CNN}}
+\caption{CNN-autoencoder neural network architecture}
+\end{figure}
+
+The model code is shown below. 
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+inputs = Input(shape=(200, 4))
+x = Conv1D(128,3, activation='relu', dilation_rate=2)(inputs)
+x2 = Conv1D(64,3, activation='relu', dilation_rate=2)(x)
+x3 = Conv1D(32,3, activation='relu', dilation_rate=2)(x2)
+
+d3 = Conv1DTranspose(32 ,3,activation='relu', dilation_rate=2)(x3)
+d4 = Conv1DTranspose(64,3,activation='relu', dilation_rate=2)(d3)
+d5 = Conv1DTranspose(128,3,activation='relu', dilation_rate=2)(d4)
+
+decoded = Conv1D(4,1,strides=1, activation='sigmoid')(d5)
+model= Model(inputs, decoded)
+model.compile(optimizer='adam', loss='mae')
+model.summary()
+
+nb_epochs = 150
+batch_size = 1024
+history = model.fit(data_train, data_train, epochs=nb_epochs, batch_size=batch_size, validation_split=0.05).history
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+Adam optimizer usually has good results in training all kinds of neural networks, so we have chosen that here. The loss function is also mean absolute error (MAE) since we have a regression problem.
+The batch size and number of epochs were selected to be 1024 and 150 for both CNN and LSTM networks.
+
+\subsection*{Train Results}
+
+We can plot the loss vs epochs in both networks. 
+
+\begin{figure}[H]
+\centering
+\subfloat{\includegraphics[width=0.8\columnwidth]{LSTMa}}
+\caption{LSTM-autoencoder loss vs epochs}
+\label{fig7}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\subfloat{\includegraphics[width=0.8\columnwidth]{CNNa}}
+\caption{CNN-autoencoder loss vs epochs}
+\label{fig8}
+\end{figure}
+
+As it can be seen in \ref{fig7} and \ref{fig8} the loss decrease smoother in LSTM compared to the CNN network but CNN can achieve lower loss overall (CNN val-loss is 0.0067 compared to LSTM val-loss of 0.038).
+
+\subsection*{Histogram of healthy and broken tooth gearbox data}
+
+Histogram diagrams of LSTM and CNN networks for both correct and anomaly data is shown in \ref{fig9} and \ref{fig10} respectively.
+
+\begin{figure}[H]
+\centering
+\subfloat[Healthy gearbox]{\includegraphics[width=0.45\columnwidth]{LSTMc.png}}\quad
+\subfloat[Anomaly]{\includegraphics[width=0.45\columnwidth]{LSTMan.png}}
+\caption{histogram diagram for loss function of LSTM network}
+\label{fig9}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\subfloat[Healthy gearbox]{\includegraphics[width=0.45\columnwidth]{CNNc.png}}\quad
+\subfloat[Anomaly]{\includegraphics[width=0.45\columnwidth]{CNNan.png}}
+\caption{histogram diagram for loss function of CNN network}
+\label{fig10}
+\end{figure}
+
+\subsection*{Results analysis}
+
+These observations can be made from the histograms
+
+\begin{enumerate}
+	\item The CNN network has a smaller final loss compared to LSTM 
+	\item Number of correct examples were more than anomaly examples
+	\item both networks have less total loss for correct examples than anomaly examples
+\end{enumerate}
+
+So both networks trained how to reconstruct the correct examples (data or signals) with lower error(loss). Since they cannot reconstruct the anomaly examples, they will have a higher output error. We must choose a threshold for error 
+To summarize, when we give an input to the network, the network reconstructs it and we can calculate the reconstruction error. We need to define a threshold to classify examples with less error than that to be correct and errors higher than that to be anomaly. 
+
+To calculate this threshold, we used formula shown.
+
+\begin{equation}
+Threshold = MEAN(losses)+STD(losses)
+\end{equation}
+
+The evaluation results of networks on the test data are listed in \ref{t3},
+
+\begin{table}[H]
+\centering
+\begin{tabular}{
+>{\columncolor[HTML]{FFFFFF}}l 
+>{\columncolor[HTML]{FFFFFF}}c 
+>{\columncolor[HTML]{FFFFFF}}c }
+{\color[HTML]{212121} \textbf{}} & {\color[HTML]{212121} \textbf{CNN NETWORK}} & {\color[HTML]{212121} \textbf{LSTM NETWORK}} \\ \cline{2-3} 
+\multicolumn{1}{l|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{accuracy}}} & {\color[HTML]{212121} 92.5\%} & {\color[HTML]{212121} 81.4\%} \\
+\multicolumn{1}{l|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{precision}}} & {\color[HTML]{212121} 100\%} & {\color[HTML]{212121} 79\%} \\
+\multicolumn{1}{l|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{Recall}}} & {\color[HTML]{212121} 85\%} & {\color[HTML]{212121} 85.5\%} \\
+\multicolumn{1}{l|}{\cellcolor[HTML]{FFFFFF}{\color[HTML]{212121} \textbf{F1}}} & {\color[HTML]{212121} 92\%} & {\color[HTML]{212121} 82\%}
+\end{tabular}
+\caption{Evaluation of networks}
+\label{t3}
+\end{table}
+
+As it can be seen in \ref{t3}, the CNN network has better performance compared to LSTM. Speed of training for LSTM networks on average was $1 \frac{s}{step}$ and for CNN network was $96 \frac{ms}{step}$.
+
+\subsection*{Sending Email}
+
+After training the model, we can use it to predict any signal data from a working gearbox. After prediction, if the reconstruction error was higher than the threshold calculated earlier, we can send an email to the clients indicating that there is a problem with the gearbox. 
+For demonstration we used the email address arduinokntu@gmail.com as server and najafi@kntu.ac.ir and j.khorramdel96@gmail.com as clients.
+
+The code for this part is shown below.
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+import smtplib
+
+reconstructions = model.predict(data_train[0:1,:,:])
+loss = tf.keras.losses.mae(reconstructions, data_train[0:1,:,:])
+loss=np.mean(loss)
+
+if (loss>threshold):
+   server=smtplib.SMTP_SSL("smtp.gmail.com",465)
+   server.login("arduinokntu@gmail.com","xxxxxxxxx")
+   server.sendmail("arduinokntu@gmail.com", 
+   ["najafi@kntu.ac.ir","j.khorramdel96@gmail.com"], 
+   "this is an email from [hoseinzadeh,borhani,ghanbarzadeh] IOT group.")
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\subsection*{Conclusion}
+
+In this report we trained a CNN and a LSTM network for anomaly detection. CNN can achieve better results with higher speed of training in comparison with LSTM. At the end if network recognize an anomaly signal, an email is sent from server to clients.
+
+\newpage
+\section*{Part II}
+
 %----------------------------------------------------------------------------------------
 %------------------------------------------------
 

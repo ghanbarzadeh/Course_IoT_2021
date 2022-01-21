@@ -74,13 +74,13 @@
 % we will modify sections, subsections and sub subsections
 \RequirePackage{titlesec}
 % Modification of section 
-\titleformat{\section}[block]{\normalsize\bfseries\filcenter}{\thesection.}{.3cm}{} 
+\titleformat{\section}[block]{\huge\bfseries\filcenter}{\thesection.}{.3cm}{} 
 
 % modification of subsection and sub sub section
-\titleformat{\subsection}[runin]{\bfseries}{ \thesubsection.}
-{1mm}{}[.\quad]
+\titleformat{\subsection}[block]{\large\bfseries}{ \thesubsection.}
+{7mm}{}
 \titleformat{\subsubsection}[runin]{\bfseries\itshape}{ \thesubsubsection.}
-{1mm}{}[.\quad]
+{1mm}{}[\quad]
 
 % Geometry lets us modify the sizes of the document nicely
 \RequirePackage{geometry}
