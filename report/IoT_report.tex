@@ -429,7 +429,524 @@ In this report we trained a CNN and a LSTM network for anomaly detection. CNN ca
 
 \newpage
 \section*{Part II}
+In this section, an attendee system is implemented. The goal is designing an appropriate neural network for face recognition using federated learning. In the first step, two main architectures have been studied. Then one of them is applied for the federated learning method.
 
+\subsection*{Face Recognition Architecture}
+In this part, at first the Siamese Networks and Multi-task Cascaded Convolutional Networks (MTCNN) are introduced briefly. Then the first structure is studied and improved. At the end of this section, the second method is discussed.
+
+\subsubsection*{About Siamese Networks}
+A Siamese Network is a type of network architecture that contains two or more identical subnetworks used to generate feature vectors for each input and compare them. Siamese Networks can be applied to different use cases, like detecting duplicates, finding anomalies, and face recognition.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.55]{Figures/siamese.jpeg}
+	\caption{Siamese Network Structure}
+	\label{fig:f}
+\end{figure}
+
+In other words, a Siamese Network consists of twin networks which accept distinct inputs but are joined by an energy function at the top. This function computes a metric between the highest level feature representation on each side. The parameters between the twin networks are tied. Weight tying guarantees that two extremely similar images are not mapped by each network to very different locations in feature space because each network computes the same function. The network is symmetric, so that whenever we present two distinct images to the twin networks, the top conjoining layer will compute the same metric as if we were to we present the same two images but to the opposite twins. Intuitively instead of trying to classify inputs, a siamese network learns to differentiate between inputs, learning their similarity. The loss function used is usually a form of contrastive loss.
+
+\subsubsection*{MTCNN: Face Detection Method}
+Multi-task Cascaded Convolutional Networks (MTCNN) is a framework developed as a solution for both face detection and face alignment. The process consists of three stages of convolutional networks that are able to recognize faces and landmark location such as eyes, nose, and mouth.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[scale=0.55]{Figures/mtcnn2.png}
+	\caption{MTCNN Network}
+	\label{fig:mt}
+\end{figure}
+
+
+As is shown in \ref{fig:mt_s}, the first stage is a fully convolutional network (FCN). The difference between a CNN and a FCN is that a fully convolutional network does not use a dense layer as part of the architechture. This Proposal Network is used to obtain candidate windows and their bounding box regression vectors.
+Bounding box regression is a popular technique to predict the localization of boxes when the goal is detecting an object of some pre-defined class, in this case faces. After obtaining the bounding box vectors, some refinement is done to combine overlapping regions. The final output of this stage is all candidate windows after refinement to downsize the volume of candidates.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=0.52]{Figures/mtcnn_structure.jpg}
+	\caption{MTCNN Structure}
+	\label{fig:mt_s}
+\end{figure}
+
+The second step is The Refine Network(R-Net). All candidates from the P-Net are fed into the Refine Network. Notice that this network is a CNN, not a FCN like the one before since there is a dense layer at the last stage of the network architecture. The R-Net further reduces the number of candidates, performs calibration with bounding box regression and employs non-maximum suppression (NMS) to merge overlapping candidates.
+The R-Net outputs whether the input is a face or not, a 4 element vector which is the bounding box for the face, and a 10 element vector for facial landmark localization.
+
+The last stage is The Output Network (O-Net). This stage is similar to the R-Net, but this Output Network aims to describe the face in more detail and output the five facial landmarks’ positions for eyes, nose and mouth.
+
+In this project, the MTCNN method is used in order to detect faces in pictures.
+\subsubsection*{First Architecture}
+In this part, the first network architecture is studied. Since the project is face recognition, the \emph{"fetch lfw people"} dataset is a suitable choice for training the network. The main structure of the network is shown in \ref{fig:f3}. This part remains constant during our study. In other words, the other part is changed to improve the algorithm's functionality. 
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=0.3]{siamese.png}
+	\caption{Siamese Network Layers}
+	\label{fig:f3}
+\end{figure}
+
+The \ref{fig:f3} represents the first design of the Siamese Network. As mentioned before, Siamese Network is used to find similarities between two images, while the Lambda layer is applied to calculate the euclidean distance of extracted features. 
+
+%\begin{figure}[!h]
+%	\centering
+%	\includegraphics[scale=0.5]{Figures/s1.png}
+%	\caption{Siamese Network (model 1)}
+%	\label{fig:f2}
+%\end{figure}
+
+The first idea is to use the VGG19 structure for transfer learning. For having better performance, 10 percent of layers are frozen, and the remaining ones become trainable. Then Global average pooling and dense layers are implemented, respectively. As it is shown in \ref{table:t1}, this structure has good performance on the training set, but the validation accuracy is not convincing. The reason is that overfitting has occurred.
+
+For solving the previous problem, the VGG19 architecture is removed. Instead of that, convolutional and max-pooling layers are implemented. The structure of this development is shown in \ref{fig:f3}.
+
+%\begin{figure}[!h]
+%	\centering
+%	\includegraphics[scale=0.3]{siamese.png}
+%	\caption{Siamese Network Architecture}
+%	\label{fig:f3}
+%\end{figure}
+
+The other method which is used in this model is using dropout layer. It can help the network to have a better result. As it is shown in \ref{table:t1}, this model has a considerable improvement compared to model 1. The test accuracy reaches almost 83 percent. 
+It should be mentioned that the Adam optimizer is applied for both model 1 and model 2. Also, the learning rate has an initial value of 0.01, and no scheduler is used.
+
+In order to check the activation function effect, instead of using ReLU, Leaky ReLU is applied (model 3). The validation accuracy reaches 87 percent. In the next step, the effect of choosing an optimizer is examined. The Adam optimizer is applied for the previous models. In model 4, the SGD with momentum is used instead of the Adam optimizer. The momentum equals 0.9. The result is shown in \ref{table:t1}.
+
+One of the effective methods is changing the learning rate schedulers. The constant learning rate is the default learning rate schedule in the SGD optimizer in Keras. Momentum and decay rate are both set to zero by default. It is tricky to choose the right learning rate. Two different learning rate schedulers are examined in this part: Exponential Decay and Cosine Decay. These two are implemented to the models with Adam and SGD optimizer. Since the Adam optimizer has not good performance with schedulers, the SGD is used instead. Model 5 benefits the Cosine decay as it performs better than the Exponential Decay. 
+
+Some references mention that when convolutional layers are implemented, the Drop Block method may have a better result than the Dropout layer. When the dropout layer applies, the image features are removed randomly according to the dropout rate. Although in the drop block method, some regions on feature map are removed. If the dimension of the block is set to 5 by 5, then this size of the region will be eliminated. In model 6, the drop block layers are used such that the probability of preserving an m-by-m region on the feature map was set to 90 percent.
+
+\begin{table}[h]
+	\centering
+	\begin{tabular}{ |c||c|c|  }
+		\hline
+		%\multicolumn{3}{|c|}{Different Model} \\
+		%\hline
+		Model Number& Best Train Accuracy &Best Validation Accuracy\\
+		\hline
+		model 1 & 99.9 & 63.9 \\
+		model 2 & 97.8 & 82.9 \\
+		model 3 & 99.6 & 87.1 \\
+		model 4 & 97.1 & 86.2 \\
+		model 5 & 99.9 & 88.1 \\
+		model 6 & 100 & 88.9 \\
+		\hline
+	\end{tabular}
+	\caption{Accuracy Results of Each Model}
+	\label{table:t1}
+\end{table}
+
+The loss is plotted for the FaceNet network which is trained using our dataset. 
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[scale=0.4]{2loss.png}
+	\caption{FaceNet model loss}
+	\label{fig:f2}
+\end{figure}
+
+It is noteworthy that the other methods are applied like augmentation, using different initial learning rates, changing transfer learning networks like VGG19 and VGG16, etc. As these ideas do not perform well, the results are not shown.
+
+\subsubsection*{Second Architecture}
+In this section, the FaceNet structure is implemented. FaceNet is a face recognition system developed in 2015 by researchers at Google that achieved then state-of-the-art results on a range of face recognition benchmark datasets. The FaceNet system can be used thanks to multiple third-party open-source implementations of the model and the availability of pre-trained models broadly. The FaceNet system can be used to extract high-quality features from faces, called face embeddings, that can then be used to train a face identification system. The model is a special case of the otherwise generalized inception model that has been tuned for face recognition task. It as a deep convolution network the accepts pixels of an image as an input and outputs a 128 dimension vector that is known as “face embedding”. To learn the weights, the model optimizes a triplet loss function wherein the images are mapped to an Euclidean space and distances between the mappings or embeddings are calculated using the K-means clustering algorithm. The embeddings the fall in the same cluster are said to be of the same person. 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.55]{Figures/FaceNet.png}
+	\caption{The Triplet Loss minimizes the distance between an anchor and a positive, both of which have the same identity, and
+		maximizes the distance between the anchor and a negative of a
+		different identity.}
+	\label{fig:f4}
+\end{figure}
+
+To put simply, if the distances between any two embedding are lesser than some threshold value then those embeddings belong to the same person. The model not only learns to reduce the distances between homogeneous faces but also to maximize the distances between heterogeneous faces. The anchor represents a control image and the positive represents an image with the same person as in the anchor image and the negative represents that of a different person. In the training phase, the model learns to form clusters having embeddings of the same person. After completion of training, the model can map an image into a cluster containing the mappings of other images of the same person thereby, discovering the identity of the person.
+
+The following steps were took during the project:
+
+\textbf{Step One:} In the first step, the FaceNet model is imported. This model is needed for extracting image features. In this part, faces from images are recognized and then turned into embeddings. 
+
+\textbf{Step Two:} One of the essential stages is to choose or collect an appropriate dataset. In this study, two datasets are used. One of them is "5-celebrity-faces-dataset". The other one is collected by our team members which contains Armin Ghanbarzadeh, Mohammad Hosseizadeh, Reza Behbahani and Navid Faraji photos.
+
+\textbf{Step Three:} In the next step, the data should be preprocessed. In this project, all images are resized to 160 by 160, and they are RGB. Then the dataset is split to train and test sets. Following previous steps, the embeddings are extracted after images are ready. 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.9]{facenet}
+	\caption{Model Structure}
+	\label{fig:f5}
+\end{figure}
+
+\textbf{Step Four:} To complete data preprocessing, the embeddings should first be pairs and the labels prepared according to those pairs. By using Permutation rules, the embeddings get pairs. Then if two embeddings belong to the same person, the label sets to 1. Otherwise, it is 0.
+
+\textbf{Step Five:} Now the embeddings are extracted and labels are ready. Since the dataset has new people inside, a few layers are implemented. We choose the MLP structure to train the model for recognizing the images in the new datasets. As it is shown in \ref{fig:f5}, two Dense layers are used. Two embeddings enter the Lambda layer first. This layer is used for calculating the Euclidean distance between two inputs. Then the hidden layer with 100 neurons is applied, and then it is the output layer.
+
+
+\newpage
+\subsection*{Implementation}
+
+The Code base has 3 important files regarding the neural network. First they will be discussed. After, we can demonstrate the Federated learning mechanism implemented. 
+
+\subsubsection*{face\_recognition.py:} This file contains the main class for our neural network. We can easily use this to train our model or test it when needed. It created the model architecture when an object of the class is made. After, the user can specify a weights file to load and perform a prediction using \textit{predict()} on a dataset. 
+
+We can also pass a train dataset to the \textit{fit()} function to train the model in place. Some helper functions are also written to easily load and save weights from files which will come in handy later. 
+
+The file is shown below (Some basic functions parts were omitted)
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+class face_recognition_network:
+
+    def __init__(self):
+        self.model = self.make_model()
+        self.weights_version = -1
+        self.WEIGHTS_PATH = 'models'
+
+    def make_model(self):
+        input_1 = tf.keras.layers.Input(shape=(128,))
+        input_2 = tf.keras.layers.Input(shape=(128,))
+        distance = tf.keras.layers.Lambda(euclidean_distance)
+        			([input_1, input_2])
+        x = Dense(100, activation='relu')(distance)
+        output = Dense(1, activation='sigmoid')(x)
+        model = tf.keras.Model(inputs=[input_1, input_2], 
+        outputs=output)
+        return model
+
+    def fit(self, x_train, x_val, y_train, y_val, epochs):
+        self.model.compile(optimizer='adam', 
+        					loss='binary_crossentropy', 
+        					metrics=["accuracy"])
+        history = self.model.fit([x_train[:,0], x_train[:,1]], 
+        							y_train[:], epochs=epochs, 
+                                    validation_data=[[x_val[:,0], 
+                                    x_val[:,1]], y_val[:]])
+        self.weights_version += 1
+        return history.history
+
+    def predict(self, x_test):
+        x_test = [x_test[:, 0],x_test[:, 1]]
+        y_test = self.model.predict(x_test)
+        # y_test = np.where(y_test, y_test>0.7, 1)
+        return y_test
+    
+    def load_weights(self, weights=None):
+        ...
+    
+    def save_weights(self, weights_file=None):
+        ...
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\subsubsection*{test\_with\_images.py:} This script uses the trained neural network with the latest weights to predict on test images placed in a folder. It uses MTCNN to detect faces and the bounding boxes within the test images. It then calculates the face embeddings using Facenet and compares the calculated embeddings to the images in our database. Based on the results, it predicts who the face belonged to. If it cannot find anyone in the database with reasonable similarity, it outputs unknown. The function \textit{test\_model\_with\_image} will be shown later. 
+
+The files code is shown below.
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+d = update_known_embeddings('update')
+nn = face_recognition_network()
+nn.load_weights('latest')
+
+test_images = glob.glob('test_images/*.jpg')
+OUTPUT_FOLDER= 'test_results'
+
+for image_path in test_images:
+    image = Image.open(image_path)
+    image = image.convert('RGB')
+    image_array = np.asarray(image)
+    r = test_model_with_image(image_array, nn, d)
+    for face in r:
+        x1, y1, x2, y2 = face['x1'], face['y1'], 
+        					face['x2'], face['y2']
+        image_array = cv2.rectangle(image_array, (x1, y1), 
+        				(x2, y2), (36,255,12), 1)
+        image_array = cv2.putText(image_array, face['name'], 
+        				(x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 
+        				0.9, (36,255,12), 2)
+    image_name = os.path.split(image_path)[-1]
+    Image.fromarray(image_array).save(os.path.join(OUTPUT_FOLDER, image_name))
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\subsubsection*{train\_head\_model.py:} This script contains a function to train the neural network on. Since we only train the network when the server tells us, this function is imported in the \textit{client.py} code shown later.
+
+\textit{make\_train\_dataset} is used to make the training set with the known embeddings from the images. After that we can simply pass the prepared dataset to the models fit function. 
+
+The code is shown below.
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+def train_model(epochs=20, weights='latest'):
+    database = update_known_embeddings('update')
+    X_train, X_val, y_train, y_val = make_train_dataset(database)
+    nn = face_recognition_network()
+    nn.load_weights(weights)
+    h = nn.fit(X_train, X_val, y_train, y_val, epochs)
+    nn.save_weights()
+    return nn
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\subsubsection*{utils.py:} This file has some functions that we used in the main scripts. We will discuss them here. 
+
+\textit{extract\_faces}: This function uses MTCNN to detect faces in a given image. It is used when preparing the training dataset and when we want to test a image. 
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+def extract_faces(image, required_size=(160, 160)):
+    detector = MTCNN()
+    results = detector.detect_faces(image)
+    faces = []
+    for i in range(len(results)):
+        x1, y1, w, h = results[i]['box']
+        x1, y1 = np.abs(x1), np.abs(y1)
+        x2, y2 = x1 + w, y1 + h
+        face = image[y1:y2, x1:x2]
+        faces.append([face, (x1,y1), (x2,y2)])
+    return faces
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\textit{get\_embedding}: This function runs the Facenet model on images and outputs the normalized embeddings for those images. 
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+def get_embedding(faces_array):
+    face_net = load_model("models/facenet")
+    mean, std = faces_array.mean(), faces_array.std()
+    samples = (faces_array - mean) / std
+    embeddings = face_net.predict(samples)
+    in_encoder = Normalizer(norm='l2')
+    embeddings = in_encoder.transform(embeddings)
+    return embeddings
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\textit{update\_known\_embeddings}: Whether we want to train or test our network, the images stored from known people are not actually necessary. We only need the image embeddings to train or compare an unknown image with. This script makes the database file which has the name of each image file with its class (human name) and a 128 vector embedding. Every time it is run, it only checks for changes in the image folders and updates this database file. Having this file on hand proves to be very usefull, especially on weaker hardware like a raspberry PI. 
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+def update_known_embeddings(embedding_file=None):
+	... 
+    return database
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\textit{make\_train\_dataset}: This function makes a dataset given a set of known embeddings. As discussed previously, it combines two images together and assigns a label. If the images are from the same person, the label is one otherwise 0. It can also be noted that a 85-15 percent train-test split is used. This is because we don't have many data (around 15 images per person) so we must use as much as possible for training.
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+def make_train_dataset(database):
+    ...
+    trainX, testX, trainy, testy = train_test_split(X, y, train_size=0.85)
+    ...
+    return X_train, X_val, y_train, y_val
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\textit{test\_model\_with\_image}: This function makes predictions for a test image. It sums the model confidence on all know people and predicts a name for each face in the image. It also returns the bounding box so we can draw a box around the faces. 
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+def test_model_with_image(image_array, model, database):
+    faces_data = extract_faces(image_array)
+	...
+        res.append({'name':n,
+                    'x1':faces_data[i][1][0],
+                    'y1':faces_data[i][1][1],
+                    'x2':faces_data[i][2][0],
+                    'y2':faces_data[i][2][1]})
+    return res
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\textit{average\_weights}: This function is used in the federated learning part. It takes a set of model weights and averages them. The server uses this function to average the weights received from the clients so it can make a new weight and send it back to them.
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+def average_weights(weights_paths, save_path):
+    ...
+    return new_weights
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\subsection*{Client-Server interaction and Federated learning}
+
+We can test the networks before training on a few images. The results are shown in \ref{f10}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=1.5]{before.png}
+	\caption{Test results without any training}
+	\label{f10}
+\end{figure}
+
+As it can be seen, it cannot correctly recognize any face in the images. It even misclassified some faces to some classes in the database. 
+
+Now we can run the server-client scripts. For the environment demonstrated here we have 2 clients. 
+
+Client 1 has images of:
+\begin{itemize}
+	\setlength\itemsep{0.01em}
+	\item Armin Ghanbarzadeh
+	\item Mohammad Hoseinzadeh
+	\item Ben Afflek
+	\item Elton John
+\end{itemize}
+
+Client 2 has images of:
+\begin{itemize}
+	\setlength\itemsep{0.01em}
+	\item Navid Faraji
+	\item Madonna
+	\item Jerry Seinfeld
+	\item Mindy Kaling
+\end{itemize}
+
+\textbf{Step One:} Server connects to clienct and sends current weights to them.
+
+\textit{Server-side Code:}
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+IP = "127.0.0.1"
+PORT = 1234
+NUMBER_OF_CLIENTS = 2
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+s.bind((IP, PORT))
+s.listen(5)
+
+clients = []
+for i in range(NUMBER_OF_CLIENTS):
+    clientsocket, address = s.accept()
+    filename = os.path.join(WEIGHTS_FOLDER, weight_file)
+    with open(filename, 'rb') as file:
+        sendfile = file.read()
+    sendfile = bytes(f"{len(sendfile):<{HEADERSIZE}}",'utf-8')+sendfile
+    clientsocket.send(sendfile)
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\textit{Client-side Code:}
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+IP = "127.0.0.1"
+PORT = 1234
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((IP, PORT))
+with open(os.path.join(WEIGHTS_FOLDER, "weights_{:04d}.h5".format(version)),'wb') as file:
+    message_header = s.recv(HEADERSIZE)
+    message_length = int(message_header.decode('utf-8').strip())
+    weights = s.recv(message_length)
+    file.write(weights)
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=1]{r1}
+	\caption{Step One (left: server, right:clients)}
+	\label{f10}
+\end{figure}
+
+\textbf{Step Two:} Now the clients start to train with the new weights. They first update the database based on any images they have, then create a training dataset. 
+
+\textit{Client-side Code:}
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+train_model(weights="weights_{:04d}.h5".format(version))
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=1]{r2}
+	\caption{Step Two (left: client 1, right:client 2)}
+	\label{f10}
+\end{figure}
+
+
+\textbf{Step Three:} The clients send the weights after training back to the server. 
+
+\textit{Server-side Code:}
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+for i in range(NUMBER_OF_CLIENTS):
+    clientsocket, address = clients[i]
+    with open(new_weights_filename,'wb') as file:
+        message_header = clientsocket.recv(HEADERSIZE)
+        message_length = int(message_header.decode('utf-8').strip())
+        weights = clientsocket.recv(message_length)
+        file.write(weights)
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\textit{Client-side Code:}
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+with open(filename, 'rb') as file:
+    sendfile = file.read()
+sendfile = bytes(f"{len(sendfile):<{HEADERSIZE}}",'utf-8')+sendfile
+s.send(sendfile)
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=1]{r3}
+	\caption{Step Three (left: server, right:clients)}
+	\label{f10}
+\end{figure}
+
+\textbf{Step Four:} The Server gets the weights, averages them and sends them back to the clients. 
+
+\textit{Server-side Code:}
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+new_weights = average_weights(client_weights, save_path)
+for file in client_weights:
+    os.remove(file)
+for i in range(NUMBER_OF_CLIENTS):
+    clientsocket, address = clients[i]
+    with open(weights_file, 'rb') as file:
+        sendfile = file.read()
+    sendfile = bytes(f"{len(sendfile):<{HEADERSIZE}}",'utf-8')+sendfile
+    clientsocket.send(sendfile)
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\textit{Client-side Code:}
+
+\begin{center}{\begin{minipage}{0.9\linewidth}
+\begin{lstlisting}[language=Python, basicstyle=\fontsize{10}{10}\selectfont\ttfamily]
+with open(os.path.join(WEIGHTS_FOLDER, "weights_{:04d}.h5".format(version+1)),'wb') as file:
+    message_header = s.recv(HEADERSIZE)
+    message_length = int(message_header.decode('utf-8').strip())
+    weights = s.recv(message_length)
+    file.write(weights)
+\end{lstlisting}
+\end{minipage}}\end{center}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=1]{r4}
+	\caption{Step Four (left: server, right:clients)}
+	\label{f10}
+\end{figure}
+
+\textbf{Step Five:} We test the clients again with the new weights. The results are shown in the images below. 
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=1.2]{after.png}
+	\caption{Test results after training}
+	\label{f10}
+\end{figure}
+
+The unknown labels were of people not in the database, so they are labeled correctly aswell. 
 %----------------------------------------------------------------------------------------
 %------------------------------------------------
 

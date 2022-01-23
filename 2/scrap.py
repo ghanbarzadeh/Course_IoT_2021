@@ -3,6 +3,8 @@ from train_head_model import train_model
 import numpy as np
 import h5py
 from face_recognition import face_recognition_network
+import time
+
 # from train_head_model import train_model
 
 # detector = MTCNN()
@@ -71,5 +73,12 @@ from face_recognition import face_recognition_network
 #     temp = temp / len(weights)
 #     new_weights.append(temp)
 # print(new_weights[-1])
-a = ['models\weights_0000.h5', 'models\weights_0001.h5']
-print(average_weights(a)[1])
+# a = ['models\weights_0000.h5', 'models\weights_0001.h5']
+# print(average_weights(a)[1])
+
+
+# from train_head_model import train_model
+
+# train_model()
+
+print(time.strftime("%H:%M:%S", time.localtime()))

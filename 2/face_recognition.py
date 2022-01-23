@@ -16,6 +16,7 @@ import tensorflow as tf
 tf.get_logger().setLevel('ERROR')
 import numpy as np
 
+
 def euclidean_distance(vectors):
         featsA, featsB = vectors
         sumSquared = K.sum(K.square(featsA - featsB), axis=1,keepdims=True)
